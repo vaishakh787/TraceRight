@@ -1,0 +1,6 @@
+.env
+node_modules/
+packages/ml/venv/
+models/*.joblib
+reports/daily-summary-*.json
+.DS_Store
