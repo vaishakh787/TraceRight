@@ -1,10 +1,10 @@
 const sql = require('mssql');
-require('dotenv').config({ path: '../../.env' }); // Points to your root .env file
+require('dotenv').config({ path: require('path').resolve(__dirname, '../../../../.env') });
 
 const config = {
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
-  server: process.env.DB_SERVER,
+  server: 'localhost\\SQLEXPRESS01',
   port: parseInt(process.env.DB_PORT || '1433'),
   database: process.env.DB_NAME,
   options: {
@@ -28,20 +28,3 @@ module.exports = {
   sql,
   poolPromise
 };
-
-// Auto-run connection test verification if executed directly via node command
-if (require.main === module) {
-  (async () => {
-    try {
-      const pool = await poolPromise;
-      const result = await pool.request().query('SELECT 1 AS connectionTest');
-      if (result.recordset[0].connectionTest === 1) {
-        console.log('Database verification successful! (SELECT 1 returned 1)');
-      }
-      process.exit(0);
-    } catch (err) {
-      console.error('Verification query failed:', err);
-      process.exit(1);
-    }
-  })();
-}
