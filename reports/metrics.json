@@ -1,0 +1,18 @@
+{
+  "feature_order": [
+    "scans_last_1h",
+    "scans_last_24h",
+    "scans_last_7d",
+    "distinct_actor_ids_24h",
+    "distinct_event_types_24h",
+    "minutes_since_prev_scan",
+    "geo_jump_km",
+    "implied_speed_kmh",
+    "night_scan_ratio_7d",
+    "consumer_validate_share_7d"
+  ],
+  "min_df": -0.15619026316317852,
+  "max_df": 0.2672031683660002,
+  "num_training_samples": 50,
+  "model_version": "iforest-v1"
+}

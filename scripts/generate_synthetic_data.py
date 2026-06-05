@@ -5,6 +5,7 @@ import random
 import uuid
 from datetime import datetime, timedelta
 import pymssql
+import pandas as pd
 
 # Configuration matrices matching Section 4.3 threat profiles
 CITIES = {
@@ -95,13 +96,12 @@ def generate_data():
 
     return events
 
-def save_to_csv(events, filepath):
-    os.makedirs(os.path.dirname(filepath), exist_ok=True)
-    with open(filepath, mode='w', newline='') as f:
-        writer = csv.DictWriter(f, fieldnames=events[0].keys())
-        writer.writeheader()
-        writer.writerows(events)
-    print(f"[+] Saved baseline features to local storage: {filepath}")
+def save_to_csv(scans, filepath='data/features.csv'):
+    """Save feature data to CSV for ML training"""
+    os.makedirs('data', exist_ok=True)
+    df = pd.DataFrame(scans)
+    df.to_csv(filepath, index=False)
+    print(f"Saved {len(scans)} records to {filepath}")
 
 def load_to_database(events):
     # Reads database destination variables from the active environment variables
