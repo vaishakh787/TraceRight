@@ -12,6 +12,8 @@ app.use(express.json());
 // Routes
 const ingestRouter = require('./routes/ingest');
 app.use('/v1', ingestRouter);
+const assessRouter = require('./routes/assess');
+app.use('/v1', assessRouter);
 
 // Health check
 app.get('/v1/health', (req, res) => {
