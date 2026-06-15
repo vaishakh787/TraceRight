@@ -18,6 +18,38 @@ router.post('/assess/qr', async (req, res, next) => {
     const parsed = assessSchema.parse(req.body);
     const asOf = parsed.asOf ? new Date(parsed.asOf) : new Date();
     const lookbackHours = parsed.lookbackHours;
+    // Idempotency check - if asOf is provided, check if we already assessed this QR code
+if (parsed.asOf) {
+  const pool = await poolPromise;
+  const existing = await pool.request()
+    .input('qrCode', sql.NVarChar, parsed.qrCode)
+    .input('assessedAt', sql.DateTime2, asOf)
+    .query(`
+      SELECT TOP 1 
+        qr_code, assessed_at, risk_score, risk_level, rule_score,
+        ml_score, ml_model_version, reasons_json, features_json
+      FROM risk_assessments
+      WHERE qr_code = @qrCode
+        AND assessed_at = @assessedAt
+    `);
+
+  if (existing.recordset.length > 0) {
+    const cached = existing.recordset[0];
+    return res.status(200).json({
+      qrCode: cached.qr_code,
+      assessedAt: cached.assessed_at,
+      featureSchemaVersion: 1,
+      riskScore: parseFloat(cached.risk_score),
+      riskLevel: cached.risk_level,
+      ruleScore: parseFloat(cached.rule_score),
+      mlScore: cached.ml_score ? parseFloat(cached.ml_score) : null,
+      mlModelVersion: cached.ml_model_version,
+      reasons: JSON.parse(cached.reasons_json),
+      features: JSON.parse(cached.features_json),
+      cached: true
+    });
+  }
+}
 
     // Step 1: Build features from database
     const { features, rawScans, insufficientHistory } = await buildFeatures(
