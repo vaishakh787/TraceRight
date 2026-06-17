@@ -4,7 +4,7 @@ require('dotenv').config({ path: require('path').resolve(__dirname, '../../../..
 const config = {
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
-  server: 'localhost\\SQLEXPRESS01',
+  server: process.env.DB_SERVER, // Fixed: dynamically routes queries to the configured host variable
   port: parseInt(process.env.DB_PORT || '1433'),
   database: process.env.DB_NAME,
   options: {
