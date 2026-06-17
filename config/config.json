@@ -1,0 +1,38 @@
+{
+  "development": {
+    "username": "sa",
+    "password": "intelligence123!",
+    "database": "ScanIntelligenceDB",
+    "host": "localhost",
+    "dialect": "mssql",
+    "dialectOptions": {
+      "options": {
+        "trustServerCertificate": true
+      }
+    }
+  },
+  "test": {
+    "username": "sa",
+    "password": "intelligence123!",
+    "database": "ScanIntelligenceDB",
+    "host": "localhost",
+    "dialect": "mssql",
+    "dialectOptions": {
+      "options": {
+        "trustServerCertificate": true
+      }
+    }
+  },
+  "production": {
+    "username": "sa",
+    "password": "intelligence123!",
+    "database": "ScanIntelligenceDB",
+    "host": "localhost",
+    "dialect": "mssql",
+    "dialectOptions": {
+      "options": {
+        "trustServerCertificate": true
+      }
+    }
+  }
+}
