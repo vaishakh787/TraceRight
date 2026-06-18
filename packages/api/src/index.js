@@ -14,6 +14,8 @@ const ingestRouter = require('./routes/ingest');
 app.use('/v1', ingestRouter);
 const assessRouter = require('./routes/assess');
 app.use('/v1', assessRouter);
+const jobsRouter = require('./routes/jobs');
+app.use('/v1', jobsRouter);
 
 // Health check
 app.get('/v1/health', (req, res) => {

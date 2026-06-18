@@ -1,6 +1,19 @@
+# Secrets and local configurations
 .env
+
+# Dependency trees and virtual environments
 node_modules/
 packages/ml/venv/
-models/*.joblib
+
+# Python compiled cache structures
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Heavy ML binaries and generated reports
+models/
 reports/daily-summary-*.json
+
+# OS specific temporary files
 .DS_Store
