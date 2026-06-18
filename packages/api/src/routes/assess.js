@@ -145,7 +145,7 @@ if (parsed.asOf) {
       return res.status(400).json({
         status: 'error',
         code: 'VALIDATION_FAILED',
-        details: err.errors.map(e => ({ field: e.path[0], message: e.message }))
+        details: err.issues ? err.issues.map(e => ({ field: e.path[0], message: e.message })) : []
       });
     }
     next(err);
