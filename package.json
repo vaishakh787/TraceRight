@@ -3,5 +3,8 @@
     "sequelize": "^6.37.8",
     "sequelize-cli": "^6.6.5",
     "tedious": "^19.2.1"
+  },
+  "devDependencies": {
+    "autocannon": "^8.0.0"
   }
 }
