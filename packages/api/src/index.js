@@ -54,7 +54,11 @@ app.use((err, req, res, next) => {
   res.status(500).json({ status: 'error', message: 'Internal server error' });
 });
 
+const { startAlertWorker } = require('./services/alertWorker');
+
 const PORT = process.env.API_PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+startAlertWorker();
