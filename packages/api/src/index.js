@@ -42,6 +42,8 @@ const assessRouter = require('./routes/assess');
 app.use('/v1', assessRouter);
 const jobsRouter = require('./routes/jobs');
 app.use('/v1', jobsRouter);
+const dashboardRouter = require('./routes/dashboard');
+app.use('/v1', dashboardRouter);
 
 // Health check
 app.get('/v1/health', (req, res) => {
