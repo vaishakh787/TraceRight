@@ -2,7 +2,9 @@ console.log('Starting server...');
 
 const express = require('express');
 const cors = require('cors');
-require('dotenv').config({ path: require('path').resolve(__dirname, '../../../.env') });
+const path = require('path');
+const fs = require('fs');
+require('dotenv').config({ path: path.resolve(__dirname, '../../../.env') });
 
 const app = express();
 
@@ -25,14 +27,46 @@ const limiter = rateLimit({
   }
 });
 
-app.use(limiter);
+// Only apply rate limiting in production to avoid blocking high-throughput stress tests in development
+if (process.env.NODE_ENV === 'production') {
+  app.use(limiter);
+}
+
+// [Day 19 Feature]: Serve static frontend dashboard mock interface view
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 // Health check stays public (no API key needed)
 app.get('/v1/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-// Apply API key auth to all other /v1 routes
+// [Day 19 Feature]: Extract and parse the absolute latest programmatic JSON report context 
+app.get('/v1/reports/latest', (req, res) => {
+  const reportsDir = path.resolve(__dirname, '../../../reports');
+  try {
+    if (!fs.existsSync(reportsDir)) {
+      return res.status(404).json({ status: 'error', message: 'Reports directory registry tier missing.' });
+    }
+    
+    const files = fs.readdirSync(reportsDir)
+      .filter(f => f.startsWith('daily-summary-') && f.endsWith('.json'))
+      .sort((a, b) => b.localeCompare(a)); // Sort dynamically descending to ensure latest file is selected first
+
+    if (files.length === 0) {
+      return res.status(404).json({ status: 'error', message: 'No reporting telemetry metrics logs found.' });
+    }
+
+    const latestReportPath = path.join(reportsDir, files[0]);
+    const fileContent = fs.readFileSync(latestReportPath, 'utf-8');
+    return res.status(200).send(JSON.parse(fileContent));
+  } catch (error) {
+    return res.status(500).json({ status: 'error', message: 'Internal exception reading performance metrics summaries.' });
+  }
+});
+
+// Apply API key auth to all remaining /v1 routes
 app.use('/v1', authApiKey);
 
 // Routes
@@ -44,11 +78,6 @@ const jobsRouter = require('./routes/jobs');
 app.use('/v1', jobsRouter);
 const dashboardRouter = require('./routes/dashboard');
 app.use('/v1', dashboardRouter);
-
-// Health check
-app.get('/v1/health', (req, res) => {
-  res.json({ status: 'ok' });
-});
 
 // Global error handler
 app.use((err, req, res, next) => {

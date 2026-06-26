@@ -4,7 +4,7 @@ This guide walks TraceRight upstream engineering teams through integrating core 
 
 ---
 
-## 🔐 Authentication Protocol
+## Authentication Protocol
 
 All outbound HTTP calls to this service must be authenticated via custom header key-routing. Unauthenticated requests are immediately dropped at the application edge with an HTTP `401 Unauthorized` status before running any database or memory calculations.
 
@@ -15,7 +15,7 @@ Content-Type: application/json
 
 ---
 
-## 🔄 Core Workflow Orchestration
+## Core Workflow Orchestration
 
 To achieve comprehensive anti-counterfeiting tracking without introducing blocking delays into physical scanning terminals, teams should use a two-step pattern: **Ingest then Assess**.
 
@@ -48,7 +48,7 @@ After successfully logging the event data points, trigger the behavioral evaluat
 
 ---
 
-## 🚫 Standard Error Footprints
+## Standard Error Footprints
 
 When validation schemas fail, the system issues an HTTP `400 Bad Request` containing a structured array designed for rapid debugging:
 

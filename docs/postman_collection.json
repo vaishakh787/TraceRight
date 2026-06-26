@@ -1,0 +1,87 @@
+{
+  "info": {
+    "_postman_id": "7a3b4e12-88ef-4932-a5f4-16c1f622da5f",
+    "name": "TraceRight Standalone Scan Intelligence API",
+    "description": "Comprehensive integration suite for real-time counterfeit product validation and cloned QR detection perimeters.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health Check Interface",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/v1/health",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["v1", "health"]
+        }
+      }
+    },
+    {
+      "name": "Ingest Transaction Log Scanning Event",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "X-API-Key", "value": "dev-key-12345", "type": "text" },
+          { "key": "Content-Type", "value": "application/json", "type": "text" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"eventId\": \"a5f4bcf9-9ea0-4cc2-b1a4-820a1983d99c\",\n  \"occurredAt\": \"2026-06-24T10:00:00.000Z\",\n  \"qrCode\": \"311191988093137\",\n  \"eventType\": \"CONSUMER_VALIDATE\",\n  \"latitude\": 12.9716,\n  \"longitude\": 77.5946,\n  \"locationLabel\": \"BENGALURU_Retail\",\n  \"actorId\": \"usr_vaishakh\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/v1/ingest/scan",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["v1", "ingest", "scan"]
+        }
+      }
+    },
+    {
+      "name": "Execute Risk Assessment Loop",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "X-API-Key", "value": "dev-key-12345", "type": "text" },
+          { "key": "Content-Type", "value": "application/json", "type": "text" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"qrCode\": \"311191988093137\",\n  \"lookbackHours\": 168\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/v1/assess/qr",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["v1", "assess", "qr"]
+        }
+      }
+    },
+    {
+      "name": "Admin Batch Evaluation Job",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "X-API-Key", "value": "admin-key-67890", "type": "text" },
+          { "key": "Content-Type", "value": "application/json", "type": "text" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"sinceHours\": 24,\n  \"maxQrs\": 5\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/v1/jobs/recompute-recent",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["v1", "jobs", "recompute-recent"]
+        }
+      }
+    }
+  ]
+}

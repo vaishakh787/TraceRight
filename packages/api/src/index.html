@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TraceRight Scan Intelligence Dashboard</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #e2e8f0; margin: 0; padding: 24px; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    h1 { color: #f8fafc; border-bottom: 2px solid #334155; padding-bottom: 12px; margin-bottom: 24px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .card { background: #1e293b; padding: 20px; border-radius: 8px; border: 1px solid #475569; }
+    .card h3 { margin: 0 0 8px 0; color: #94a3b8; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .card .value { font-size: 28px; font-weight: bold; color: #38bdf8; }
+    .badge { display: inline-block; padding: 4px 12px; border-radius: 4px; font-weight: bold; font-size: 14px; }
+    .badge-ok { background: #15803d; color: #bbf7d0; }
+    .badge-error { background: #991b1b; color: #fee2e2; }
+    table { width: 100%; border-collapse: collapse; background: #1e293b; border-radius: 8px; overflow: hidden; border: 1px solid #475569; }
+    th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #334155; }
+    th { background: #334155; color: #f8fafc; font-weight: 600; }
+    tr:last-child td { border-bottom: none; }
+    .risk-CRITICAL { color: #f43f5e; font-weight: bold; }
+    .risk-HIGH { color: #fb923c; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>TraceRight Standalone Service Dashboard</h1>
+    
+    <div class="grid">
+      <div class="card">
+        <h3>Gateway Operational Node Health</h3>
+        <div id="health-status" class="badge badge-error">Pinging Gateway Node...</div>
+      </div>
+      <div class="card">
+        <h3>Total Ingested Scans (24h)</h3>
+        <div id="stat-ingested" class="value">-</div>
+      </div>
+      <div class="card">
+        <h3>Assessments Executed</h3>
+        <div id="stat-assessed" class="value">-</div>
+      </div>
+      <div class="card">
+        <h3>Critical Anomalies Blocked</h3>
+        <div id="stat-critical" class="value">-</div>
+      </div>
+    </div>
+
+    <h2>Top Flagged High-Risk Barcode Assets (24h lookback)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>QR Code Identifier</th>
+          <th>Calculated Vector Risk Score</th>
+          <th>Mitigation Action Bucket Range</th>
+          <th>Detection Trigger Frequency</th>
+        </tr>
+      </thead>
+      <tbody id="flagged-table-body">
+        <tr>
+          <td colspan="4" style="text-align: center; color: #94a3b8;">Processing file log streams matrix...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    async function fetchDashboardMetrics() {
+      try {
+        const healthRes = await fetch('/v1/health');
+        const healthData = await healthRes.json();
+        const element = document.getElementById('health-status');
+        if (healthData.status === 'ok') {
+          element.innerText = 'ONLINE';
+          element.className = 'badge badge-ok';
+        }
+      } catch (err) {
+        const element = document.getElementById('health-status');
+        element.innerText = 'OFFLINE';
+        element.className = 'badge badge-error';
+      }
+
+      try {
+        const statsRes = await fetch('/v1/reports/latest');
+        const report = await statsRes.json();
+        
+        document.getElementById('stat-ingested').innerText = report.summaryStats.totalScansIngested;
+        document.getElementById('stat-assessed').innerText = report.summaryStats.totalAssessmentsProcessed;
+        document.getElementById('stat-critical').innerText = report.summaryStats.riskLevelCounts.CRITICAL || 0;
+
+        const tbody = document.getElementById('flagged-table-body');
+        tbody.innerHTML = '';
+
+        if (!report.topFlaggedQrs || report.topFlaggedQrs.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #94a3b8;">No high risk anomalous vectors logged within this calendar cycle window.</td></tr>';
+          return;
+        }
+
+        report.topFlaggedQrs.forEach(row => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><code>${row.qrCode}</code></td>
+            <td>${row.riskScore}</td>
+            <td><span class="risk-${row.riskLevel}">${row.riskLevel}</span></td>
+            <td>${row.flaggedCount} times</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        document.getElementById('flagged-table-body').innerHTML = 
+          '<tr><td colspan="4" style="text-align: center; color: #94a3b8;">No diagnostic report generated for today yet. Run the summary job script to view metrics.</td></tr>';
+      }
+    }
+
+    fetchDashboardMetrics();
+  </script>
+</body>
+</html>

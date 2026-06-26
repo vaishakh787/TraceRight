@@ -4,7 +4,7 @@ TraceRight is a high-security traceability platform that detects cloned QR codes
 
 ---
 
-## 🛠️ Prerequisites
+##  Prerequisites
 
 Before getting started, ensure the following runtimes are installed on your host machine:
 
@@ -14,7 +14,7 @@ Before getting started, ensure the following runtimes are installed on your host
 
 ---
 
-## 🚀 Setup & Installation Steps
+##  Setup & Installation Steps
 
 ### 1. Clone the Repository
 
@@ -35,7 +35,7 @@ cp .env.example .env
 
 Open the newly created `.env` file at the root directory and update the parameters matching your environment.
 
-> ⚠️ **Important Collaborative Network Note:** If connecting to a database hosted on a peer's machine across a shared local Wi-Fi network, replace `localhost` with their active network IPv4 address (e.g., `DB_SERVER=192.168.1.45\\SQLEXPRESS01`).
+>  **Important Collaborative Network Note:** If connecting to a database hosted on a peer's machine across a shared local Wi-Fi network, replace `localhost` with their active network IPv4 address (e.g., `DB_SERVER=192.168.1.45\\SQLEXPRESS01`).
 
 ---
 
@@ -115,7 +115,7 @@ Upon startup, the server console will log a successful connection verification b
 
 ---
 
-## 🧪 Verification & Smoke Testing
+##  Verification & Smoke Testing
 
 To verify the end-to-end telemetry evaluation loop is working perfectly across your systems, launch an isolated verification probe from your terminal window:
 

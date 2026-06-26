@@ -1,14 +1,14 @@
 # =================================================================─╮
-# 🧭 TRACERIGHT ROOT ENGINE SYSTEM PERIMETER GITIGNORE
+#   TRACERIGHT ROOT ENGINE SYSTEM PERIMETER GITIGNORE
 # =================================================================─╯
 
-# 🔐 Cryptographic Credentials & Local Variables
+#  Cryptographic Credentials & Local Variables
 .env
 .env.local
 .env.production
 .env.development
 
-# 🟢 Node.js Node Runtime Layers (API Gateway)
+#  Node.js Node Runtime Layers (API Gateway)
 node_modules/
 /packages/api/node_modules/
 npm-debug.log*
@@ -16,7 +16,7 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# 🐍 Python Analytics Subsystem (ML Microservice)
+#  Python Analytics Subsystem (ML Microservice)
 __pycache__/
 *.py[cod]
 *$py.class
@@ -41,7 +41,7 @@ share/python-wheels/
 .pytest_cache/
 .mypy_cache/
 
-# 📦 Local Isolation Virtual Environments
+#  Local Isolation Virtual Environments
 venv/
 .venv/
 env/
@@ -49,15 +49,15 @@ env/
 packages/ml/venv/
 packages/ml/.venv/
 
-# 🤖 Machine Learning Model Artifacts & Weights
+#  Machine Learning Model Artifacts & Weights
 models/*.joblib
 models/*.pkl
 packages/ml/models/
 
-# 📊 Dynamic Local Runtime Analytics Logs
+#  Dynamic Local Runtime Analytics Logs
 reports/daily-summary-*.json
 
-# 🖥️ Local IDE Configuration Spaces & Operating System Noise
+#  Local IDE Configuration Spaces & Operating System Noise
 .vscode/
 .idea/
 .DS_Store
