@@ -1,7 +1,30 @@
 {
   "dependencies": {
+    "dotenv": "^17.4.2",
     "sequelize": "^6.37.8",
     "sequelize-cli": "^6.6.5",
     "tedious": "^19.2.1"
-  }
+  },
+  "name": "traceright",
+  "version": "1.0.0",
+  "description": "A fraud detection microservice for TraceRight's QR code traceability platform. Detects cloned/counterfeit barcodes by analyzing scan behavior patterns across time and geography.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vaishakh787/TraceRight.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/vaishakh787/TraceRight/issues"
+  },
+  "homepage": "https://github.com/vaishakh787/TraceRight#readme"
 }

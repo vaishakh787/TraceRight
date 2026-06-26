@@ -4,7 +4,6 @@ const http = require('http');
 
 const WEBHOOK_URL = process.env.ALERT_WEBHOOK_URL;
 const POLL_INTERVAL_MS = 5000; // check every 5 seconds
-const MAX_RETRIES = 3;
 
 /**
  * Sends a payload to the webhook URL
