@@ -6,7 +6,7 @@ const API_KEY = (process.env.API_KEYS || 'dev-key-12345').split(',')[0].trim();
 const PORT = process.env.API_PORT || 3000;
 
 console.log('==================================================================');
-console.log('👉 TRACERIGHT HIGH-LOAD RESILIENCE INFERENCE SUITE');
+console.log('  TRACERIGHT HIGH-LOAD RESILIENCE INFERENCE SUITE');
 console.log(`Target Gateway: http://localhost:${PORT}/v1/assess/qr`);
 console.log('Throughput Target: 100 Transactions Per Second (TPS)');
 console.log('==================================================================\n');
