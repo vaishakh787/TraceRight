@@ -1,0 +1,148 @@
+openapi: 3.0.3
+info:
+  title: TraceRight Standalone Scan Intelligence API
+  version: 1.0.0
+  description: Real-time high-throughput counterfeit product and cloned QR asset verification platform.
+paths:
+  /v1/health:
+    get:
+      summary: Health Check Interface
+      description: Returns health profiles for the persistent storage engines and internal machine learning RPC clients.
+      responses:
+        '200':
+          description: Service structural baseline operational.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  db:
+                    type: string
+                    example: ok
+                  ml:
+                    type: string
+                    example: ok
+
+  /v1/ingest/scan:
+    post:
+      summary: Ingest Transaction Log Scanning Event
+      description: Logs incoming supply chain tracking event coordinates into the master datastore. Enforces UUID data idempotency.
+      parameters:
+        - name: X-API-Key
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - eventId
+                - occurredAt
+                - qrCode
+                - eventType
+              properties:
+                eventId:
+                  type: string
+                  format: uuid
+                occurredAt:
+                  type: string
+                  format: date-time
+                qrCode:
+                  type: string
+                  pattern: '^\d{15}$'
+                eventType:
+                  type: string
+                  enum: [AUDIT, DISPATCH, STOCK_AUDIT, CONSUMER_VALIDATE, RETURN, OTHER]
+                latitude:
+                  type: number
+                  minimum: -90
+                  maximum: 90
+                longitude:
+                  type: number
+                  minimum: -180
+                  maximum: 180
+                locationLabel:
+                  type: string
+                actorId:
+                  type: string
+      responses:
+        '210':
+          description: Event successfully verified and committed.
+        '200':
+          description: Duplicate transaction token caught. Re-commit bypassed safely.
+        '400':
+          description: Validation schema check failed.
+        '401':
+          description: Missing or rotated validation api token.
+
+  /v1/assess/qr:
+    post:
+      summary: Execute Risk Assessment Loop
+      description: Dynamically runs statistical processing passes over historical logs, triggers model processing, and evaluates the asset risk band.
+      parameters:
+        - name: X-API-Key
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - qrCode
+              properties:
+                qrCode:
+                  type: string
+                  pattern: '^\d{15}$'
+                asOf:
+                  type: string
+                  format: date-time
+                lookbackHours:
+                  type: integer
+                  default: 168
+      responses:
+        '200':
+          description: Evaluation completed successfully.
+        '400':
+          description: Malformed body arguments passed.
+        '401':
+          description: Authentication rejected.
+
+  /v1/jobs/recompute-recent:
+    post:
+      summary: Admin Batch Evaluation Suite
+      description: Bulk-recomputes active analytics features and threat flags across a past time window.
+      parameters:
+        - name: X-API-Key
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sinceHours:
+                  type: integer
+                  default: 24
+                maxQrs:
+                  type: integer
+                  default: 500
+      responses:
+        '200':
+          description: Recomputation batch job finalized.
+        '401':
+          description: Administrative signature token missing or invalid.
