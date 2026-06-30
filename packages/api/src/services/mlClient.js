@@ -1,7 +1,7 @@
 const http = require('http');
 
-const ML_SERVICE_URL = process.env.ML_SERVICE_URL || 'http://localhost:8081';
 const ML_TIMEOUT_MS = 800;
+const ML_SERVICE_URL = process.env.ML_SERVICE_URL || 'http://localhost:8081';
 
 /**
  * Calls the Python ML service to get an anomaly score
@@ -14,10 +14,12 @@ async function getMLScore(features) {
       features: features
     });
 
+    const url = new URL('/predict', ML_SERVICE_URL);
+
     const options = {
-      hostname: 'localhost',
-      port: 8081,
-      path: '/predict',
+      hostname: url.hostname,
+      port: url.port || 80,
+      path: url.pathname,
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

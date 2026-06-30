@@ -4,7 +4,7 @@ const { poolPromise, sql } = require('../packages/api/src/db/connection');
 
 async function runDailyReport() {
   console.log('==================================================================');
-  console.log(' TRACERIGHT DAILY PERFORMANCE & RISK SUMMARY GENERATOR');
+  console.log('📊 TRACERIGHT DAILY PERFORMANCE & RISK SUMMARY GENERATOR');
   console.log('==================================================================');
 
   try {
@@ -115,14 +115,14 @@ async function runDailyReport() {
     fs.writeFileSync(targetFilePath, JSON.stringify(reportPayload, null, 2), 'utf-8');
 
     console.log('==================================================================');
-    console.log(' SUMMARY REPORT COMPILED SUCCESSFULLY');
+    console.log('✅ SUMMARY REPORT COMPILED SUCCESSFULLY');
     console.log(`Saved Destination: reports/${targetFileName}`);
     console.log('==================================================================');
     console.log(JSON.stringify(reportPayload, null, 2));
     
     process.exit(0);
   } catch (error) {
-    console.error('\n Critical Exception Triggered During Reporting Compilation Loop:', error);
+    console.error('\n❌ Critical Exception Triggered During Reporting Compilation Loop:', error);
     process.exit(1);
   }
 }

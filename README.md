@@ -1,19 +1,27 @@
-# TraceRight: Standalone Scan Intelligence Service
+# Scan Intelligence Service
 
-TraceRight is a high-security traceability platform that detects cloned QR codes and counterfeit products by analyzing spatial-temporal and behavioral tracking anomalies across the supply chain. This service leverages a decoupled monorepo architecture combining a deterministic Rules Engine (Node.js Express) and an unsupervised Machine Learning Anomaly Detection service (Python FastAPI + Isolation Forest).
+A fraud detection microservice for TraceRight's QR code traceability platform. Detects cloned/counterfeit barcodes by analyzing scan behavior patterns across time and geography.
 
----
+## Architecture
 
+<<<<<<< HEAD
 ##  Prerequisites
+=======
+- **API**: Node.js + Express (`packages/api`)
+- **ML Service**: Python + FastAPI (`packages/ml`)
+- **Database**: Microsoft SQL Server
+>>>>>>> meghna
 
-Before getting started, ensure the following runtimes are installed on your host machine:
+## Setup
 
-* **Node.js** (v18.x or higher)
-* **Python** (v3.11.x)
-* **Microsoft SQL Server** (Instance initialized with Mixed Mode Authentication enabled)
+### Prerequisites
+- Node.js
+- Python 3.11+
+- SQL Server Express
 
----
+### Installation
 
+<<<<<<< HEAD
 ##  Setup & Installation Steps
 
 ### 1. Clone the Repository
@@ -105,47 +113,89 @@ Keep this terminal tab open.
 Open a parallel terminal tab, move into the backend folder, pull dependencies, and boot the web application framework layer on port `3000`:
 
 ```zsh
+=======
+```bash
+# Clone and install
+git clone <repo-url>
+cd TraceRight
+
+# API setup
+>>>>>>> meghna
 cd packages/api
 npm install
+
+# ML setup
+cd ../ml
+python -m venv venv
+.\venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+### Database Setup
+Run `packages/api/src/db/schema.sql` against your SQL Server instance.
+
+### Environment Variables
+Copy `.env.example` to `.env` and fill in your database credentials.
+
+## Running the Service
+
+**Terminal 1 - ML Service:**
+```bash
+cd packages/ml
+.\venv\Scripts\activate
+uvicorn serve:app --port 8081
+```
+
+**Terminal 2 - API:**
+```bash
+cd packages/api
 node src/index.js
-
 ```
 
-Upon startup, the server console will log a successful connection verification block matching your active SQL Server data target.
+## API Endpoints
 
----
+| Endpoint | Method | Description |
+|---|---|---|
+| `/v1/health` | GET | Health check |
+| `/v1/ingest/scan` | POST | Record a scan event |
+| `/v1/assess/qr` | POST | Get fraud risk assessment |
+| `/v1/jobs/recompute-recent` | POST | Batch recompute risk for recently active QR codes |
+| `/v1/dashboard/recent` | GET | Recent risk assessments |
 
+<<<<<<< HEAD
 ##  Verification & Smoke Testing
+=======
+All endpoints except `/health` require an `X-API-Key` header.
+>>>>>>> meghna
 
-To verify the end-to-end telemetry evaluation loop is working perfectly across your systems, launch an isolated verification probe from your terminal window:
+## Fraud Detection Rules
 
-### Test Case A: Cold Start Evaluation (Day 12 Gate)
+| Rule | Condition | Points |
+|---|---|---|
+| R1 | 10+ scans in 1 hour | 40 |
+| R2 | 5+ scans in 15 minutes | 35 |
+| R3 | Speed > 900 km/h | 45 |
+| R4 | Geo jump > 2000km in 2h | 50 |
+| R5 | 8+ distinct actors in 24h | 25 |
+| R6 | Heavy consumer validation share | 20 |
 
-Send a request evaluating a brand-new, unseen QR token asset to confirm the short-circuit fallback logic runs cleanly:
+## Risk Scoring
 
-```zsh
-curl -X POST http://localhost:3000/v1/assess/qr \
-  -H "Content-Type: application/json" \
-  -d '{
-    "qrCode": "999999999999999"
-  }'
+| Score | Level    |
+|---    |---       |
+| 0-24  | LOW      |
+| 25-49 | MEDIUM   |
+| 50-74 | HIGH     |
+| 75-100| CRITICAL |
 
-```
+## Testing
 
-*Expected Output:* Status `200 OK` containing `"riskLevel": "LOW"` accompanied by the reason string `"INFO:INSUFFICIENT_HISTORY"`.
+Import `docs/Scan Intelligence Service.postman_collection.json` into Postman to test all endpoints.
 
-### Test Case B: Admin Bulk Recomputation Job (Day 13 Gate)
+## Dashboard
 
-Trigger the administrative cron interface parameters to force a back-testing evaluation sweep across active historical records:
+Open `docs/dashboard.html` in a browser (with the API running) to view recent risk assessments.
 
-```zsh
-curl -X POST http://localhost:3000/v1/jobs/recompute-recent \
-  -H "Content-Type: application/json" \
-  -d '{
-    "sinceHours": 24,
-    "maxQrs": 5
-  }'
+## Built During
 
-```
-
-*Expected Output:* Status `200 OK` detailing exact success computation boundaries along with a collection array of the reprocessed tracking barcodes.
+TraceRight Summer Internship - 4 Week Sprint (June 2026)

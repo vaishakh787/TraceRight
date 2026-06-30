@@ -1,111 +1,77 @@
 const { poolPromise, sql } = require('../db/connection');
-const https = require('https');
-const http = require('http');
 
 const WEBHOOK_URL = process.env.ALERT_WEBHOOK_URL;
-const POLL_INTERVAL_MS = 5000; // check every 5 seconds
-const MAX_RETRIES = 3;
+const POLL_INTERVAL_MS = 10000; // Polling loop interval (10 seconds)
+const BATCH_SIZE = 10; // Process alerts in clean blocks to minimize memory utilization
 
-/**
- * Sends a payload to the webhook URL
- */
-function sendWebhook(payload) {
-  return new Promise((resolve, reject) => {
-    const url = new URL(WEBHOOK_URL);
-    const data = JSON.stringify(payload);
-
-    const isHttps = url.protocol === 'https:';
-    const lib = isHttps ? https : http;
-
-    const options = {
-      hostname: url.hostname,
-      port: url.port || (isHttps ? 443 : 80),
-      path: url.pathname,
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(data)
-      },
-      timeout: 5000
-    };
-
-    const req = lib.request(options, (res) => {
-      let body = '';
-      res.on('data', chunk => body += chunk);
-      res.on('end', () => {
-        if (res.statusCode >= 200 && res.statusCode < 300) {
-          resolve(true);
-        } else {
-          reject(new Error(`Webhook returned status ${res.statusCode}`));
-        }
-      });
-    });
-
-    req.on('timeout', () => {
-      req.destroy();
-      reject(new Error('Webhook request timed out'));
-    });
-
-    req.on('error', (err) => {
-  reject(new Error(`Webhook request error: ${err.code} - ${err.message}`));
-});
-
-    req.write(data);
-    req.end();
-  });
-}
-
-/**
- * Processes all PENDING alerts in the outbox
- */
-async function processAlerts() {
-  const pool = await poolPromise;
-
-  // Fetch pending alerts
-  const result = await pool.request().query(`
-    SELECT TOP 10 id, qr_code, risk_level, payload_json
-    FROM alert_outbox
-    WHERE status = 'PENDING'
-    ORDER BY created_at ASC
-  `);
-
-  const alerts = result.recordset;
-
-  if (alerts.length === 0) {
+async function processAlertOutbox() {
+  if (!WEBHOOK_URL) {
+    console.error('[Worker Error]: ALERT_WEBHOOK_URL configuration is missing in the environment.');
     return;
   }
 
-  console.log(`[AlertWorker] Found ${alerts.length} pending alert(s)`);
+  try {
+    const pool = await poolPromise;
 
-  for (const alert of alerts) {
-    try {
-      const payload = JSON.parse(alert.payload_json);
-      await sendWebhook(payload);
+    // Fetch a batch of PENDING alert records
+    const result = await pool.request()
+      .input('batchSize', sql.Int, BATCH_SIZE)
+      .query(`
+        SELECT TOP (@batchSize) id, qr_code, risk_level, payload_json
+        FROM alert_outbox
+        WHERE status = 'PENDING'
+        ORDER BY created_at ASC
+      `);
 
-      // Mark as SENT
-      await pool.request()
-        .input('id', sql.BigInt, alert.id)
-        .query(`
-          UPDATE alert_outbox 
-          SET status = 'SENT', sent_at = SYSUTCDATETIME()
-          WHERE id = @id
-        `);
+    const alerts = result.recordset;
+    if (alerts.length === 0) return;
 
-      console.log(`[AlertWorker] Sent alert for QR ${alert.qr_code} (${alert.risk_level})`);
+    console.log(`[AlertWorker] Found ${alerts.length} pending alert(s)`);
 
-    } catch (err) {
-      console.error(`[AlertWorker] Failed to send alert ${alert.id}: ${err.message}`);
+    for (const alert of alerts) {
+      try {
+        const response = await fetch(WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: alert.payload_json,
+          signal: AbortSignal.timeout(5000)
+        });
 
-      // Mark as FAILED and store the error
-      await pool.request()
-        .input('id', sql.BigInt, alert.id)
-        .input('error', sql.NVarChar, err.message.substring(0, 500))
-        .query(`
-          UPDATE alert_outbox 
-          SET status = 'FAILED', last_error = @error
-          WHERE id = @id
-        `);
+        if (!response.ok) {
+          throw new Error(`Webhook returned status ${response.status} ${response.statusText}`);
+        }
+
+        await pool.request()
+          .input('id', sql.BigInt, alert.id)
+          .query(`
+            UPDATE alert_outbox
+            SET status = 'SENT',
+                sent_at = SYSUTCDATETIME(),
+                last_error = NULL
+            WHERE id = @id
+          `);
+
+        console.log(`[AlertWorker] Sent alert for QR ${alert.qr_code} (${alert.risk_level})`);
+
+      } catch (error) {
+        console.error(`[AlertWorker] Failed to send alert ${alert.id}: ${error.message}`);
+
+        const errorString = error.stack || error.message || 'Unknown network invocation error';
+        const truncatedError = errorString.substring(0, 500);
+
+        await pool.request()
+          .input('id', sql.BigInt, alert.id)
+          .input('lastError', sql.NVarChar(512), truncatedError)
+          .query(`
+            UPDATE alert_outbox
+            SET status = 'FAILED',
+                last_error = @lastError
+            WHERE id = @id
+          `);
+      }
     }
+  } catch (globalError) {
+    console.error('[AlertWorker] Critical error during polling cycle:', globalError);
   }
 }
 
@@ -114,11 +80,11 @@ async function processAlerts() {
  */
 function startAlertWorker() {
   console.log(`[AlertWorker] Starting, polling every ${POLL_INTERVAL_MS / 1000}s`);
-  setInterval(() => {
-    processAlerts().catch(err => {
-      console.error('[AlertWorker] Unexpected error:', err.message);
-    });
-  }, POLL_INTERVAL_MS);
+  console.log(`[AlertWorker] Webhook target: ${WEBHOOK_URL || 'NOT CONFIGURED'}`);
+
+  // Run an immediate sweep, then continue on the polling interval
+  processAlertOutbox();
+  setInterval(processAlertOutbox, POLL_INTERVAL_MS);
 }
 
-module.exports = { startAlertWorker, processAlerts };
+module.exports = { startAlertWorker, processAlertOutbox };

@@ -6,7 +6,7 @@ const API_KEY = (process.env.API_KEYS || 'dev-key-12345').split(',')[0].trim();
 const PORT = process.env.API_PORT || 3000;
 
 console.log('==================================================================');
-console.log('  TRACERIGHT HIGH-LOAD RESILIENCE INFERENCE SUITE');
+console.log('👉 TRACERIGHT HIGH-LOAD RESILIENCE INFERENCE SUITE');
 console.log(`Target Gateway: http://localhost:${PORT}/v1/assess/qr`);
 console.log('Throughput Target: 100 Transactions Per Second (TPS)');
 console.log('==================================================================\n');
@@ -50,10 +50,10 @@ const instance = autocannon({
   console.log(`Non-2xx Responses  : ${result.non2xx}`);
   
   if (fatalErrors > 0) {
-    console.error('\n Resilience Validation Failed: Service dropped requests under degraded states.');
+    console.error('\n❌ Resilience Validation Failed: Service dropped requests under degraded states.');
     process.exit(1);
   } else {
-    console.log('\n Resilience Validation Passed: Error rate is exactly 0.00%. Gateway fully absorbed subsystem fault.');
+    console.log('\n✅ Resilience Validation Passed: Error rate is exactly 0.00%. Gateway fully absorbed subsystem fault.');
     process.exit(0);
   }
 });
