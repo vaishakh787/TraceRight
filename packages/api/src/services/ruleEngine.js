@@ -43,13 +43,13 @@ function checkR1_HighFrequency(features) {
  * R2: Burst - 5+ scans in 15 minutes
  * Weight: 35
  */
-function checkR2_Burst(recentScans) {
+function checkR2_Burst(recentScans, asOf) {
   if (!recentScans || recentScans.length === 0) {
     return { fired: false, contribution: 0, reason: null };
   }
 
-  const now = new Date();
-  const window15m = new Date(now.getTime() - 15 * 60 * 1000);
+  const referenceTime = asOf ? new Date(asOf) : new Date();
+  const window15m = new Date(referenceTime.getTime() - 15 * 60 * 1000);
 
   const scansIn15m = recentScans.filter(scan => 
     new Date(scan.occurred_at || scan.occurredAt) >= window15m
@@ -129,10 +129,10 @@ function checkR6_ConsumerDominance(features) {
  * Main rule engine runner for R1 through R6
  * Returns the total rule score and list of fired reasons
  */
-function runRules(features, recentScans) {
+function runRules(features, recentScans, asOf) {
   const results = [
     checkR1_HighFrequency(features),
-    checkR2_Burst(recentScans),
+    checkR2_Burst(recentScans, asOf),
     checkR3_GeoSpeed(features),
     checkR4_GeoJump(features),
     checkR5_MultiActor(features),

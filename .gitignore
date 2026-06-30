@@ -17,3 +17,5 @@ reports/daily-summary-*.json
 
 # OS specific temporary files
 .DS_Store
+
+config/config.json
