@@ -1,0 +1,39 @@
+name: TraceRight Core Integration Suite
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  quality-assurance:
+    name: Code Quality & Threat Analysis Unit Testing
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Codebase
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js Core Environment
+      uses: actions/setup-node@v4
+      with:
+        node-version: '25.1.0'
+        cache: 'npm'
+
+    - name: Install Master Application Dependencies
+      run: npm install
+
+    - name: Install Internal API Gateway Dependencies
+      run: |
+        cd packages/api
+        npm install
+
+    - name: Execute Code Linting Verification
+      run: npm run lint
+
+    - name: Run Native Threat Intelligence Unit Tests
+      run: npm run test:unit
