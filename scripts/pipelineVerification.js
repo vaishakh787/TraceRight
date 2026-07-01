@@ -14,6 +14,10 @@ const API_KEY = (process.env.API_KEYS || 'dev-key-12345').split(',')[0].trim();
 const PORT = process.env.API_PORT || 3000;
 const BASE_URL = `http://localhost:${PORT}/v1`;
 
+// Global suite status trackers
+let passedScenarios = 0;
+let failedScenarios = 0;
+
 /**
  * Robustly parses the baseline feature dataset to locate seeded target profiles.
  * Enforces index boundary safety checks during line-by-line processing.
@@ -54,8 +58,9 @@ function extractTargetVectors() {
 
 /**
  * Dispatches a transaction array payload to the risk assessment scoring gateway.
+ * Evaluates the results against an array of expected risk levels.
  */
-async function executeAssessment(qrCode, scenarioIdentifier) {
+async function executeAssessment(qrCode, scenarioIdentifier, expectedRiskLevels = []) {
   console.log(`\n[SCENARIO] Initializing Evaluation Sequence: ${scenarioIdentifier}`);
   console.log(`[INFO] Target Barcode Serial Vector: ${qrCode}`);
 
@@ -72,8 +77,9 @@ async function executeAssessment(qrCode, scenarioIdentifier) {
     const payload = await response.json();
     
     if (!response.ok) {
-      console.error(`[FAILURE] Assessment API returned error status: ${response.status}`);
-      console.error(`[FAILURE] Error details: ${JSON.stringify(payload)}`);
+      console.error(`❌ [FAILURE] Assessment API returned error status: ${response.status}`);
+      console.error(`❌ [FAILURE] Error details: ${JSON.stringify(payload)}`);
+      failedScenarios++;
       return false;
     }
 
@@ -87,9 +93,20 @@ async function executeAssessment(qrCode, scenarioIdentifier) {
     } else {
       console.log(`│   Isolation Forest Outlier : UNAVAILABLE (Degraded Mode Fallback Active)`);
     }
+
+    // Pass/Fail Assertion Verification Block
+    if (expectedRiskLevels.length > 0 && !expectedRiskLevels.includes(payload.riskLevel)) {
+      console.error(`❌ [ASSERTION FAILED]: Expected risk level to be one of ${JSON.stringify(expectedRiskLevels)}, but received [${payload.riskLevel}]`);
+      failedScenarios++;
+      return false;
+    }
+
+    console.log(`✅ [ASSERTION PASSED]: Classification falls safely within expected boundaries.`);
+    passedScenarios++;
     return true;
   } catch (error) {
-    console.error(`[ERROR] Network invocation exception encountered: ${error.message}`);
+    console.error(`❌ [ERROR] Network invocation exception encountered: ${error.message}`);
+    failedScenarios++;
     return false;
   }
 }
@@ -143,7 +160,7 @@ async function executeAuditFloodScenario() {
   }
 
   // Evaluate the tracking barcode asset immediately following the ingestion sweep
-  await executeAssessment(floodQr, "Real-Time Ingestion Audit Flood Capture");
+  await executeAssessment(floodQr, "Real-Time Ingestion Audit Flood Capture", ["HIGH", "CRITICAL"]);
 }
 
 /**
@@ -157,33 +174,44 @@ async function runSystemVerificationSuite() {
 
   const vectors = extractTargetVectors();
 
-  // Scenario 1: Legitimate Supply Chain Log
+  // Scenario 1: Legitimate Supply Chain Log -> Expect LOW risk footprint
   if (vectors.legitimateQr) {
-    await executeAssessment(vectors.legitimateQr, "Standard Supply Chain Movement");
+    await executeAssessment(vectors.legitimateQr, "Standard Supply Chain Movement", ["LOW"]);
   } else {
     console.warn('[WARN] Skipping Scenario 1: No legitimate baseline samples resolved in CSV registry.');
   }
 
-  // Scenario 2: Active Real-Time Audit Flooding
+  // Scenario 2: Active Real-Time Audit Flooding -> Expect high frequency anomalies
   await executeAuditFloodScenario();
 
-  // Scenario 3: Geolocation Anomaly (Impossible Velocity)
+  // Scenario 3: Geolocation Anomaly (Impossible Velocity) -> Expect HIGH or CRITICAL
   if (vectors.teleportQr) {
-    await executeAssessment(vectors.teleportQr, "Impossible Velocity Teleportation Anomaly");
+    await executeAssessment(vectors.teleportQr, "Impossible Velocity Teleportation Anomaly", ["HIGH", "CRITICAL"]);
   } else {
     console.warn('[WARN] Skipping Scenario 3: No teleportation attack samples resolved in CSV registry.');
   }
 
-  // Scenario 4: High-Frequency Clone Bursting
+  // Scenario 4: High-Frequency Clone Bursting -> Expect definitive CRITICAL breach status
   if (vectors.cloneBurstQr) {
-    await executeAssessment(vectors.cloneBurstQr, "High-Frequency Clone Burst Anomaly");
+    await executeAssessment(vectors.cloneBurstQr, "High-Frequency Clone Burst Anomaly", ["CRITICAL"]);
   } else {
     console.warn('[WARN] Skipping Scenario 4: No clone burst attack samples resolved in CSV registry.');
   }
 
   console.log('\n==================================================================');
-  console.log('TRACERIGHT PIPELINE AUTOMATION TEST CYCLE SUMMARY: SUCCESS');
+  console.log('TRACERIGHT PIPELINE AUTOMATION TEST CYCLE SUMMARY');
   console.log('==================================================================');
+  console.log(`[PASSED] Scenarios: ${passedScenarios}`);
+  console.log(`[FAILED] Scenarios: ${failedScenarios}`);
+  console.log('==================================================================');
+
+  if (failedScenarios > 0) {
+    console.error(`❌ [FAILURE] Integration suite exited with ${failedScenarios} broken assertion checkpoints.`);
+    process.exit(1);
+  } else {
+    console.log(`✅ [SUCCESS] All E2E data processing pipelines functional and fully verified.`);
+    process.exit(0);
+  }
 }
 
 // Invoke master test controller execution block

@@ -56,7 +56,7 @@ def generate_data():
                 "eventId": str(uuid.uuid4()),
                 "occurredAt": scan_time.isoformat() + "Z",
                 "qrCode": qr,
-                "eventType": "DISTRIBUTION",
+                "eventType": "DISPATCH",  # ⚡ FIXED: Aligned enum string to match API schema validation rules
                 "latitude": lat,
                 "longitude": lon,
                 "locationLabel": f"Burst_{city_name}",

@@ -124,16 +124,25 @@ def train_model(features_df):
     return model, min_df, max_df
 
 if __name__ == '__main__':
-    print("Loading data from features.csv...")
-    df = pd.read_csv('data/features.csv')
+    # ⚡ FIXED: Calculate absolute base project directory path dynamically relative to file location
+    # train.py is located at packages/ml/train.py, so going up 3 levels targets the TraceRight root directory.
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    
+    csv_path = os.path.join(BASE_DIR, 'data', 'features.csv')
+    print(f"Loading data from: {csv_path}")
+    
+    if not os.path.exists(csv_path):
+        raise FileNotFoundError(f"Seeded features baseline missing at {csv_path}. Please execute data seeders first.")
+
+    df = pd.read_csv(csv_path)
     df = df.rename(columns={
-    'eventId': 'event_id',
-    'occurredAt': 'occurred_at',
-    'qrCode': 'qr_code',
-    'eventType': 'event_type',
-    'locationLabel': 'location_label',
-    'actorId': 'actor_id'
-})
+        'eventId': 'event_id',
+        'occurredAt': 'occurred_at',
+        'qrCode': 'qr_code',
+        'eventType': 'event_type',
+        'locationLabel': 'location_label',
+        'actorId': 'actor_id'
+    })
     print(f"Loaded {len(df)} raw scan records for {df['qr_code'].nunique()} QR codes")
     
     print("Computing features...")
@@ -143,13 +152,16 @@ if __name__ == '__main__':
     print("Training Isolation Forest model...")
     model, min_df, max_df = train_model(features_df)
     
-    # Save the model
-    os.makedirs('models', exist_ok=True)
-    joblib.dump(model, 'models/iforest-v1.joblib')
-    print("Model saved to models/iforest-v1.joblib")
+    # Save the model relative to dynamically computed BASE_DIR
+    models_dir = os.path.join(BASE_DIR, 'models')
+    os.makedirs(models_dir, exist_ok=True)
+    model_output_path = os.path.join(models_dir, 'iforest-v1.joblib')
+    joblib.dump(model, model_output_path)
+    print(f"Model saved to: {model_output_path}")
     
-    # Save metrics
-    os.makedirs('reports', exist_ok=True)
+    # Save metrics metadata context relative to dynamically computed BASE_DIR
+    reports_dir = os.path.join(BASE_DIR, 'reports')
+    os.makedirs(reports_dir, exist_ok=True)
     metrics = {
         'feature_order': FEATURE_ORDER,
         'min_df': min_df,
@@ -157,10 +169,11 @@ if __name__ == '__main__':
         'num_training_samples': len(features_df),
         'model_version': 'iforest-v1'
     }
-    with open('reports/metrics.json', 'w') as f:
+    metrics_output_path = os.path.join(reports_dir, 'metrics.json')
+    with open(metrics_output_path, 'w') as f:
         json.dump(metrics, f, indent=2)
-    print("Metrics saved to reports/metrics.json")
+    print(f"Metrics saved to: {metrics_output_path}")
     
-    print("\nTraining complete!")
+    print("\n🎉 Training run complete! Paths aligned safely.")
     print(f"Min decision function: {min_df:.4f}")
     print(f"Max decision function: {max_df:.4f}")

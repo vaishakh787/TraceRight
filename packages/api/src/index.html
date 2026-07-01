@@ -81,7 +81,13 @@
       }
 
       try {
-        const statsRes = await fetch('/v1/reports/latest');
+        // Authenticate the request against the newly secured metrics route
+        const statsRes = await fetch('/v1/reports/latest', {
+          headers: {
+            'X-API-Key': 'dev-key-12345',
+            'Content-Type': 'application/json'
+          }
+        });
         const report = await statsRes.json();
         
         document.getElementById('stat-ingested').innerText = report.summaryStats.totalScansIngested;

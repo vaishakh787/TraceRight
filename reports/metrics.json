@@ -11,8 +11,8 @@
     "night_scan_ratio_7d",
     "consumer_validate_share_7d"
   ],
-  "min_df": -0.10836372819487117,
-  "max_df": 0.26847634550804456,
+  "min_df": -0.08397477207118909,
+  "max_df": 0.28329036656554085,
   "num_training_samples": 50,
   "model_version": "iforest-v1"
 }

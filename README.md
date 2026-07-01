@@ -1,201 +1,129 @@
 # Scan Intelligence Service
 
-A fraud detection microservice for TraceRight's QR code traceability platform. Detects cloned/counterfeit barcodes by analyzing scan behavior patterns across time and geography.
+A real-time fraud detection microservice for TraceRight's QR code traceability platform. It detects cloned/counterfeit barcodes by analyzing scan behavior patterns across space and time.
 
-## Architecture
+##   Architecture
 
-<<<<<<< HEAD
-##  Prerequisites
-=======
-- **API**: Node.js + Express (`packages/api`)
-- **ML Service**: Python + FastAPI (`packages/ml`)
-- **Database**: Microsoft SQL Server
->>>>>>> meghna
+* **API Gateway Layer**: Node.js + Express (`packages/api`)
+* **Machine Learning Inference Subsystem**: Python + FastAPI (`packages/ml`)
+* **Persistent Storage Engine**: Microsoft SQL Server / Azure SQL Edge
 
-## Setup
+---
+
+##   Setup & System Initialization
 
 ### Prerequisites
-- Node.js
-- Python 3.11+
-- SQL Server Express
 
-### Installation
+* Node.js (v20+)
+* Python 3.11+
+* Docker (for localized database engine containerization)
 
-<<<<<<< HEAD
-##  Setup & Installation Steps
+### 1. Clone the Repository & Environment Profile Setup
 
-### 1. Clone the Repository
-
-```zsh
-git clone https://github.com/YOUR_USERNAME/TraceRight.git
+```bash
+git clone https://github.com/vaishakh787/TraceRight.git
 cd TraceRight
 
-```
-
-### 2. Configure Environment Variables
-
-Copy the configuration template to create your local environment file:
-
-```zsh
+# Instantiate local configuration profiles
 cp .env.example .env
-
 ```
 
-Open the newly created `.env` file at the root directory and update the parameters matching your environment.
+>   **Network Mapping Note**: The Core Express API uses the **`API_PORT`** environment configuration variable (defaults to port `3000`). If your database is hosted on a peer's workstation across a shared local network, update your loopback endpoint array to match their IPv4 address block (e.g., `DB_SERVER=192.168.1.45`).
 
->  **Important Collaborative Network Note:** If connecting to a database hosted on a peer's machine across a shared local Wi-Fi network, replace `localhost` with their active network IPv4 address (e.g., `DB_SERVER=192.168.1.45\\SQLEXPRESS01`).
+### 2. Database Schema Management & Telemetry Seeding
 
----
+Ensure your Docker container instance (`mssql_local`) is active and accepting socket streams on port `1433`. Run the orchestration pipeline scripts from the **project root directory**:
 
-### 3. Database Layer Initialization & Seeding
+```bash
+# Apply updated database schema tables along with optimized DESC sorting lookup indexes
+npx sequelize-cli db:migrate
 
-#### A. Initialize Database Schema (Migration)
-
-Connect to your target SQL Server instance using a management client (such as SSMS or Azure Data Studio), create a database named `ScanIntelligenceDB`, and execute the DDL structural script found at:
-
-```path
-packages/api/src/db/schema.sql
-
+# Seed transaction metrics dataset profiles via the synthetic data engine
+python seeders/generate_synthetic_data.py --load-db
 ```
 
-This builds the `scan_events`, `risk_assessments`, and `alert_outbox` structures with all required index arrays.
+### 3. Machine Learning Analytics Module Setup
 
-#### B. Generate & Load Baseline Telemetry (Seeding)
+Navigate into the analytical model workspace, configure an isolated virtual environment shell, install your numerical parsing libraries, and fit your weights:
 
-Install the data-sync utilities and run the synthetic engine profile to seed your database with normal vectors, Clone Bursts, and Teleportation attacks:
-
-```zsh
-pip install pandas pymssql python-dotenv
-python scripts/generate_synthetic_data.py --load-db
-
-```
-
----
-
-### 4. Machine Learning Subsystem Setup (Python)
-
-Navigate to the machine learning module, isolate your runtime environment, and install version-pinned analytical library packages:
-
-```zsh
+```bash
 cd packages/ml
 python -m venv venv
-source venv/bin/activate  # On Windows use: venv\Scripts\activate
+source venv/bin/activate  # On Windows command lines: .\venv\Scripts\activate
 pip install -r requirements.txt
 
-```
-
-#### A. Train Anomaly Detection Engine Matrix
-
-Fit the baseline Isolation Forest model on the feature snapshots generated during the seeding phase:
-
-```zsh
+# Fit and generate the Isolation Forest model binary matrix mapping
 python train.py
 
-```
-
-This generates the serialized model binary mapping into `models/iforest-v1.joblib` and calibration anchors inside `reports/metrics.json`.
-
-#### B. Launch the Inference Microservice
-
-Expose the predictive API endpoints locally on port `8081`:
-
-```zsh
+# Spin up the FastAPI real-time predictive inference routing service
 uvicorn serve:app --port 8081 --reload
-
 ```
 
-Keep this terminal tab open.
+Keep this terminal window running active in the background.
 
----
+### 4. API Server Core Gateway Backend Configuration
 
-### 5. API Server Backend Core Setup (Node.js)
+Open a parallel terminal tab, move into your gateway cluster workspace, resolve packages, and initialize the main server node listener:
 
-Open a parallel terminal tab, move into the backend folder, pull dependencies, and boot the web application framework layer on port `3000`:
-
-```zsh
-=======
 ```bash
-# Clone and install
-git clone <repo-url>
-cd TraceRight
-
-# API setup
->>>>>>> meghna
 cd packages/api
 npm install
-
-# ML setup
-cd ../ml
-python -m venv venv
-.\venv\Scripts\activate
-pip install -r requirements.txt
-```
-
-### Database Setup
-Run `packages/api/src/db/schema.sql` against your SQL Server instance.
-
-### Environment Variables
-Copy `.env.example` to `.env` and fill in your database credentials.
-
-## Running the Service
-
-**Terminal 1 - ML Service:**
-```bash
-cd packages/ml
-.\venv\Scripts\activate
-uvicorn serve:app --port 8081
-```
-
-**Terminal 2 - API:**
-```bash
-cd packages/api
 node src/index.js
 ```
 
-## API Endpoints
+---
 
-| Endpoint | Method | Description |
-|---|---|---|
-| `/v1/health` | GET | Health check |
-| `/v1/ingest/scan` | POST | Record a scan event |
-| `/v1/assess/qr` | POST | Get fraud risk assessment |
-| `/v1/jobs/recompute-recent` | POST | Batch recompute risk for recently active QR codes |
-| `/v1/dashboard/recent` | GET | Recent risk assessments |
+##   Operational API Endpoint Blueprint
 
-<<<<<<< HEAD
-##  Verification & Smoke Testing
-=======
-All endpoints except `/health` require an `X-API-Key` header.
->>>>>>> meghna
+| Endpoint Router Path | HTTP Method | Access Perimeter Security | Description |
+| --- | --- | --- | --- |
+| `/v1/health` | GET | Public (Unauthenticated) | Gateway cluster and connection health diagnostic heartbeats |
+| `/v1/ingest/scan` | POST | Required Secure Header (`X-API-Key`) | Ingest incoming transactional logistics log streams |
+| `/v1/assess/qr` | POST | Required Secure Header (`X-API-Key`) | Trigger dynamic heuristics check rules + ML fusion scoring loops |
+| `/v1/reports/latest` | GET | Required Secure Header (`X-API-Key`) | Extract compiled system summary statistics reports |
 
-## Fraud Detection Rules
+>   All protected service routes demand verification passed through the `X-API-Key` request header parameter.
 
-| Rule | Condition | Points |
-|---|---|---|
-| R1 | 10+ scans in 1 hour | 40 |
-| R2 | 5+ scans in 15 minutes | 35 |
-| R3 | Speed > 900 km/h | 45 |
-| R4 | Geo jump > 2000km in 2h | 50 |
-| R5 | 8+ distinct actors in 24h | 25 |
-| R6 | Heavy consumer validation share | 20 |
+---
 
-## Risk Scoring
+##   Analytics Rules Engine Matrix
 
-| Score | Level    |
-|---    |---       |
-| 0-24  | LOW      |
-| 25-49 | MEDIUM   |
-| 50-74 | HIGH     |
-| 75-100| CRITICAL |
+Heuristics engine calculations run linearly over a sliding lookback ledger matrix window and are strictly capped at an upper ceiling limit of **100**.
 
-## Testing
+| Rule Identifier | Trigger Evaluation Condition Heuristic Check | Point Contribution Weight |
+| --- | --- | --- |
+| **R1_HIGH_FREQ** | 10 or more scans recorded within a rolling 1-hour window. | **40 Points** |
+| **R2_BURST** | 5 or more scans registered inside an ultra-short 15-minute window. | **35 Points** |
+| **R3_GEO_SPEED** | Calculated velocity vectors exceed **900 km/h** across a jump distance > 50 km. | **45 Points** |
+| **R4_GEO_JUMP** | Absolute physical teleportation tracking jump > **2000 km** within 2 hours. | **50 Points** |
+| **R5_MULTI_ACTOR** | 8 or more unique operational operator identities scanning the same asset in 24h. | **25 Points** |
+| **R6_CONSUMER** | Retail customer validation traffic accounts for > 60% of total weekly records. | **20 Points** |
 
-Import `docs/Scan Intelligence Service.postman_collection.json` into Postman to test all endpoints.
+### Threat Signature Scoring Bands
 
-## Dashboard
+$$\text{riskScore} = \text{round}(0.55 \times \text{ruleScore} + 0.45 \times \text{mlScore})$$
 
-Open `docs/dashboard.html` in a browser (with the API running) to view recent risk assessments.
+* **0.00 to 24.99**: **LOW RISK** (Standard logistical routing execution path)
+* **25.00 to 49.99**: **MEDIUM RISK** (Flagged for routine asynchronous asset review schedules)
+* **50.00 to 74.99**: **HIGH RISK** (Notification queued in alert outbox table for async processing handlers)
+* **75.00 to 100.00**: **CRITICAL ANOMALY** (Real-time dispatch warning webhook broadcast)
 
-## Built During
+---
 
-TraceRight Summer Internship - 4 Week Sprint (June 2026)
+##   Verification & Automated Core Testing
+
+### Native Domain Logic Unit Tests
+
+Execute the native decoupled test runner suite to assess edge logic rules and score fusion mathematical matrices:
+
+```bash
+node --test packages/api/test/unit.test.js
+```
+
+### End-to-End Core Integration Smoke Tests
+
+Verify end-to-end integration flows (including validation catches and duplicate routing handling tokens) against your active running server instance:
+
+```bash
+node packages/api/test.js
+```

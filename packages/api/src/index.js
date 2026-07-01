@@ -32,7 +32,7 @@ if (process.env.NODE_ENV === 'production') {
   app.use(limiter);
 }
 
-// [Day 19 Feature]: Serve static frontend dashboard mock interface view
+// Serve static frontend dashboard mock interface view
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
@@ -42,7 +42,10 @@ app.get('/v1/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-// [Day 19 Feature]: Extract and parse the absolute latest programmatic JSON report context 
+// Apply API key auth to all remaining /v1 routes
+app.use('/v1', authApiKey);
+
+// Extract and parse the absolute latest programmatic JSON report context (Now Authenticated)
 app.get('/v1/reports/latest', (req, res) => {
   const reportsDir = path.resolve(__dirname, '../../../reports');
   try {
@@ -66,10 +69,7 @@ app.get('/v1/reports/latest', (req, res) => {
   }
 });
 
-// Apply API key auth to all remaining /v1 routes
-app.use('/v1', authApiKey);
-
-// Routes
+// Domain Routes
 const ingestRouter = require('./routes/ingest');
 app.use('/v1', ingestRouter);
 const assessRouter = require('./routes/assess');
